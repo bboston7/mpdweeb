@@ -8,6 +8,8 @@
                [alarm-evt (Real -> Event)]
                [sync (Event -> Any)])
 
+(provide get-artists)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Module Variables                                                      ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -33,18 +35,7 @@ Returns
 (: get-artists (-> (Listof String)))
 (define (get-artists)
   (send-string "list artist")
-  (letrec: ([res->list : (-> (Listof String))
-              (lambda ()
-                (let ([line (read-string)])
-                  (if (string-starts-with? line "Artist:")
-                    (cons (substring line 8) (res->list))
-                    (begin
-                      (check-response line)
-                      null))))])
-    (res->list)))
-
-
-
+  (map (lambda: ([x : String]) (substring x 8)) (response->list "Artist:")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Private functions                                                     ;;;;
@@ -96,6 +87,26 @@ Returns:
     (if (eof-object? line)
       (raise "Unexpected EOF from server")
       line)))
+
+#|
+Builds a list of responses starting with start
+
+Parameters:
+    start - Expected start of each line
+Throws:
+    Exception if EOF, or unexpected server response
+Returns:
+    List of responses from the server
+|#
+(: response->list (String -> (Listof String)))
+(define (response->list start)
+  (let ([line (read-string)])
+    (if (string-starts-with? line start)
+      (cons line (response->list start))
+      (begin
+        (check-response line)
+        null))))
+
 
 #|
 Sends a string to the mpd server
