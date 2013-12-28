@@ -25,6 +25,21 @@ Connects to mpd server on HOST:PORT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #|
+Get a list of albums from a given artist
+
+Parameters
+    artist - Artist to get albums by
+Throws
+    Exception if server is unreachable
+Returns
+    String list of albums by artist
+|#
+(: get-albums (String -> (Listof String)))
+(define (get-albums artist)
+  (send-string (format "list album ~s" artist))
+  (map (lambda: ([x : String]) (substring x 7)) (response->list "Album:")))
+
+#|
 Get a list of all artists from the mpd server
 
 Throws:
@@ -106,7 +121,6 @@ Returns:
       (begin
         (check-response line)
         null))))
-
 
 #|
 Sends a string to the mpd server
