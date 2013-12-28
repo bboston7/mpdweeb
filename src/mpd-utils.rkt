@@ -52,6 +52,29 @@ Returns
   (send-string "list artist")
   (map (lambda: ([x : String]) (substring x 8)) (response->list "Artist:")))
 
+#|
+Get a list of all tracks from a certain artist
+
+Parameters
+    artist - Artist that album belongs to
+    album  - Album to get tracks for
+Throws
+    Exception if server is unreachable
+Returns
+    List of pairs in format '(title filename)
+|#
+(: get-tracks (String String -> (Listof (Pair String String))))
+(define (get-tracks artist album)
+  (send-string (format "find album ~s artist ~s" album artist))
+  (letrec: ([next-track : (-> (Listof (Pair String String)))
+              (lambda ()
+                (let ([file (get-next "file:")])
+                  (if file
+                    (cons (cons (assert (get-next "Title:") string?) file)
+                          (next-track))
+                    null)))])
+    (next-track)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Private functions                                                     ;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -71,6 +94,26 @@ Returns:
   (if (equal? res "OK")
     #t
     (error "Bad response from MPD server: " res)))
+
+#|
+Get next line starting with start from server response
+
+Parameters
+    start - Line to return
+Throws
+    Exception if EOF or line starting with "ACK"
+Returns
+    First line starting with start or #f if end of stream is reached
+|#
+(: get-next (String -> (Option String)))
+(define (get-next start)
+  (let ([line (read-string)])
+    (cond
+      [(string-starts-with? line start) line]
+      [(string-starts-with? line "OK") #f]
+      [(string-starts-with? line "ACK") (error "Illegal command: " line)]
+      [else (get-next start)])))
+
 
 #|
 Creates a thread that sends a ping to the server at regular intervals and
