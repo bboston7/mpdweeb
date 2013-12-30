@@ -17,6 +17,7 @@
 
 (serve/servlet start
                #:command-line? #t
+               #:listen-ip #f
                #:servlet-path "/"
                #:servlet-regexp #rx""
                #:stateless? #t)

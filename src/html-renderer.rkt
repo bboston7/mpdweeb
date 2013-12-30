@@ -28,8 +28,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (get-binary path)
-  (file->bytes
-    (string->path (format "~a/~a" DIR (string-join path "/")))))
+  (let ([path (format "~a/~a" DIR (string-join path "/"))])
+    (if TRANSCODE
+      (transcode-file path)
+      (file->bytes (string->path path)))))
 
 (define (render-albums artist)
   (list->ul-list (map (lambda (x) (cons x (format "~a/~a" artist x)))
@@ -41,6 +43,18 @@
 (define (render-tracks artist album)
   (list->ul-list (map (lambda (x) (cons (car x) (format "/static/~a" (cdr x))))
                       (get-tracks artist album))))
+
+(define (transcode-file path)
+  (displayln path)
+  (let* ([proc (process (format
+                          "ffmpeg -v 0 -i ~s -f ogg -vn -acodec libvorbis -aq ~a -"
+                          path
+                          OGG_QUAL))]
+         [ogg (port->bytes (car proc))])
+    (close-input-port (car proc))
+    (close-output-port (cadr proc))
+    (close-input-port (cadddr proc))
+    ogg))
 
 #|
 Transform lst into a ul X-expression list that can be embedded in html
