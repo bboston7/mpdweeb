@@ -8,7 +8,9 @@
                [alarm-evt (Real -> Event)]
                [sync (Event -> Any)])
 
-(provide get-artists)
+(provide get-albums
+         get-artists
+         get-tracks)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Module Variables                                                      ;;;;
@@ -70,7 +72,9 @@ Returns
               (lambda ()
                 (let ([file (get-next "file:")])
                   (if file
-                    (cons (cons (assert (get-next "Title:") string?) file)
+                    (cons (cons
+                            (substring (assert (get-next "Title:") string?) 7) 
+                            (substring file 6))
                           (next-track))
                     null)))])
     (next-track)))
